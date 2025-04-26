@@ -1,5 +1,5 @@
 # **Depth Map Animator**
-![Depth Map Animator Preview](depth-map-animator-preview.gif)
+<video src="depth-map-animator.mp4" controls width="600"></video>
 **Depth Map Animator** is a simple web tool that animates an image using its depth map to create a 3D-like parallax effect. Built with **JavaScript**, **PHP**, and **HTML**, it allows users to upload an image and a depth map, animate it, record the animation, and download the result.
 
 ## ✨ Features
