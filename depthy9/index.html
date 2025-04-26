@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload Form</title>
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <div class="form-container">
+    <h1>Upload Your Image and Depth Map</h1>
+    <form action="upload.php" method="POST" enctype="multipart/form-data">
+      <label for="realImage">Upload Real Image (JPG):</label>
+      <input type="file" name="realImage" id="realImage" accept="image/jpeg" required>
+
+      <label for="depthMap">Upload Depth Map (PNG):</label>
+      <input type="file" name="depthMap" id="depthMap" accept="image/png" required>
+
+      <button type="submit" class="upload-btn">Upload and Process</button>
+    </form>
+  </div>
+
+</body>
+</html>

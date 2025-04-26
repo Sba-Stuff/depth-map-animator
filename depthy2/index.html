@@ -1,0 +1,111 @@
+
+
+<!DOCTYPE html> 
+
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, initial-scale=1.0" />
+		
+		<script src="ivank.js"></script>
+		<script src="DepthViewer.js"></script>
+		<script>
+			var s, view, btns,b0,b1,needDepth;
+			function go() {
+				s = new Stage("c");
+				s.addEventListener(Event.RESIZE, onRS);
+				
+				view = new DepthViewer();
+				s.addChild(view);
+				
+				btns = new Sprite();  s.addChild(btns);
+				b0 = makeBTN("Load Color");  btns.addChild(b0);  b0.x = -110;
+				b1 = makeBTN("Load Depth");  btns.addChild(b1);  b1.x =   10;
+				b0.addEventListener(MouseEvent.CLICK,btnClick);
+				b1.addEventListener(MouseEvent.CLICK,btnClick);
+				
+				window.addEventListener("message", onMessage);
+				//setTimeout(btnClick,500);
+			}
+			
+			function btnClick(e) {  needDepth=e&&e.currentTarget==b1;  window.parent.postMessage("app.activeDocument.saveToOE(\"bmp\");", "*");  }
+			var bf = new Uint8Array(4),
+			u32 = new Uint32Array(bf.buffer);
+			u16 = new Uint16Array(bf.buffer);
+			function rUI(d,o) {  for(var i=0; i<4; i++) bf[i]=d[o+i];  return u32[0];  }
+			function rUS(d,o) {  for(var i=0; i<2; i++) bf[i]=d[o+i];  return u16[0];  }
+
+			function onMessage(e) {  
+				if(!(e.data instanceof ArrayBuffer)) return;
+				var buff = new Uint8Array(e.data), offset=2;
+				var size = rUI(buff, offset);  offset += 4;
+				offset += 4;
+				var ioff = rUI(buff, offset);  offset += 4;  //console.log("image offset: " + ioff);
+				
+				var plto = offset+40;
+				
+				var hs = rUI(buff, offset);  offset += 4;  //console.log("image offset: " + ioff);
+				var w = rUI(buff, offset);  offset += 4;
+				var h = rUI(buff, offset);  offset += 4;
+				var pln = rUS(buff, offset);  offset += 2;
+				var bpp = rUS(buff, offset);  offset += 2;
+				if(bpp!=24 && bpp!=8 && bpp!=4 && bpp!=1) throw bpp;
+				var nimg = new Uint8Array(w*h*4);  nimg.fill(255);
+				
+				var rsize = 4* Math.floor((bpp * w + 31) / 32);
+				
+				for(var y=0; y<h; y++)
+					for(var x=0; x<w; x++) {
+						var si = y*rsize+((x*bpp)>>>3);
+						var ti = (h-y-1)*w+x;
+						if(bpp<=8) {
+							var ci = buff[ioff+si];
+							if     (bpp==1) ci = (ci>>>(7-  (x&7)))& 1;
+							else if(bpp==4) ci = (ci>>>(4-4*(x&1)))&15;
+							nimg[ti*4  ]=buff[plto+ci*4+2];
+							nimg[ti*4+1]=buff[plto+ci*4+1];
+							nimg[ti*4+2]=buff[plto+ci*4+0];
+						}
+						else {
+							nimg[ti*4  ]=buff[ioff+si+2];
+							nimg[ti*4+1]=buff[ioff+si+1];
+							nimg[ti*4+2]=buff[ioff+si+0];
+						}
+					}
+				view.SetBitmap(nimg,w,h,needDepth);
+			}    
+ 
+			function onRS(e) {
+				var w = s.stageWidth, h = s.stageHeight;
+				view.uiresize(w,h);
+				btns.x = w/2;
+				btns.y = h-30;
+			}
+			
+			function makeBTN(lab) {
+				var sp = new Sprite();  sp.buttonMode = true;
+				sp.graphics.beginFill(0x000000);
+				sp.graphics.drawRect(0,0,100,30);
+				sp.graphics.endFill();
+				
+				var f1 = new TextFormat("sans-serif", 16, 0xffffff, true, false);
+				
+				var t1 = new TextField();
+				t1.selectable = false;	// default is true
+				t1.setTextFormat(f1);
+				t1.text = lab;
+				t1.width = t1.textWidth; t1.height = t1.textHeight;
+				sp.addChild(t1);  t1.x = t1.y = 8;
+				
+				var tf = new TextField()
+				return sp;
+			}
+		</script>
+	</head>
+	
+	<body onload="go()" class="flexrow scrollable">	
+		
+		<canvas id="c"></canvas>
+		
+	</body>
+</html>

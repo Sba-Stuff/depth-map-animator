@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>Fake 3D effect with depth map</title>
+  <link rel="stylesheet" href="https://public.codepenassets.com/css/reset-2.0.min.css">
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<canvas id="canvas"></canvas>
+
+  <div class="controls" id="controlsPanel">
+  <label>
+    <input type="checkbox" id="enableIntensity" checked>
+    Enable Intensity
+  </label>
+  <label>
+    Intensity
+    <input type="range" id="intensitySlider" min="0.1" max="3" step="0.1" value="1">
+  </label>
+  <label>
+    Speed
+    <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1">
+  </label>
+
+  <button onclick="startAnimation('upDown')">Up and Down</button>
+  <button onclick="startAnimation('leftRight')">Left and Right</button>
+  <button onclick="startAnimation('round')">Move Round</button>
+  <button onclick="startAnimation('perspectiveRound')">Parallax Perspective</button>
+  <button onclick="startAnimation('zoomCenterIn')">Zoom In To Center</button>
+  <button onclick="startAnimation('zoomCenterOut')">Zoom Out From Center</button>
+  <button onclick="startAnimation('zoomTopLeft')">Zoom To Top Left</button>
+  <button onclick="startAnimation('zoomTopRight')">Zoom To Top Right</button>
+  <button onclick="startAnimation('zoomBottomLeft')">Zoom To Bottom Left</button>
+  <button onclick="startAnimation('zoomBottomRight')">Zoom To Bottom Right</button>
+  <button onclick="startAnimation('random')">Random</button>
+</div>
+
+<!-- vertex shader -->
+<script id="vs" type="f">
+	attribute vec2 position;
+	attribute vec2 texcoord;
+
+	uniform mat3 u_matrix;
+
+	varying vec2 v_texcoord;
+
+	void main() {
+		 gl_Position = vec4(u_matrix * vec3(position, 1), 1);
+		 v_texcoord = texcoord;
+	}
+</script>
+
+<!-- fragment shader -->
+<script id="fs" type="f">
+	precision mediump float;
+
+	uniform vec2 u_mouse;
+
+	uniform sampler2D u_originalImage;
+	uniform sampler2D u_mapImage;
+
+	varying vec2 v_texcoord;
+
+	void main() {
+		 vec4 depthDistortion = texture2D(u_mapImage, v_texcoord);
+		 float parallaxMult = depthDistortion.r;
+
+		 vec2 parallax = (u_mouse) * parallaxMult;
+
+		 vec4 original = texture2D(u_originalImage, (v_texcoord + parallax));
+		 gl_FragColor = original;
+	}
+</script>
+<!-- partial -->
+  <script src='https://cdn.rawgit.com/greggman/twgl.js/master/dist/4.x/twgl-full.min.js'></script>
+<script src='https://webglfundamentals.org/webgl/resources/m3.js'></script><script  src="./script.js"></script>
+
+</body>
+</html>
